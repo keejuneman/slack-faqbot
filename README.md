@@ -61,6 +61,11 @@
     ```
     ![image](https://github.com/user-attachments/assets/882c5073-eec7-4d56-9945-eaacfb8d5eb3)
 
+6. Bot을 실행합니다.
+
+    ```bash
+    python main.py
+    ```
 ## Slack 봇 설정[https://api.slack.com/]
 
 1. OAuth & Permissions

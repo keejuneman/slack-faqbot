@@ -1,0 +1,84 @@
+{
+    "categories": [
+        {
+            "id": "category_1",
+            "name": "카테고리 1",
+            "questions": [
+                {
+                    "id": "category_1_question_1",
+                    "question": "질문 1",
+                    "answer": "카테고리 1의 질문 1에 대한 답변입니다."
+                },
+                {
+                    "id": "category_1_question_2",
+                    "question": "질문 2",
+                    "answer": "카테고리 1의 질문 2에 대한 답변입니다."
+                },
+                {
+                    "id": "category_1_question_3",
+                    "question": "질문 3",
+                    "answer": "카테고리 1의 질문 3에 대한 답변입니다."
+                }
+            ]
+        },
+        {
+            "id": "category_2",
+            "name": "카테고리 2",
+            "questions": [
+                {
+                    "id": "category_2_question_1",
+                    "question": "질문 1",
+                    "answer": "카테고리 2의 질문 1에 대한 답변입니다."
+                },
+                {
+                    "id": "category_2_question_2",
+                    "question": "질문 2",
+                    "answer": "카테고리 2의 질문 2에 대한 답변입니다."
+                }
+            ]
+        },
+        {
+            "id": "category_3",
+            "name": "카테고리 3",
+            "questions": [
+                {
+                    "id": "category_3_question_1",
+                    "question": "질문 1",
+                    "answer": "카테고리 3의 질문 1에 대한 답변입니다."
+                },
+                {
+                    "id": "category_3_question_2",
+                    "question": "질문 2",
+                    "answer": "카테고리 3의 질문 2에 대한 답변입니다."
+                }
+            ]
+        },
+        {
+            "id": "category_4",
+            "name": "카테고리 4",
+            "questions": [
+                {
+                    "id": "category_4_question_1",
+                    "question": "질문 1",
+                    "answer": "카테고리 4의 질문 1에 대한 답변입니다."
+                }
+            ]
+        },
+        {
+            "id": "category_5",
+            "name": "카테고리 5",
+            "questions": [
+                {
+                    "id": "category_5_question_1",
+                    "question": "질문 1",
+                    "answer": "카테고리 5의 질문 1에 대한 답변입니다."
+                },
+                {
+                    "id": "category_5_question_2",
+                    "question": "질문 2",
+                    "answer": "카테고리 5의 질문 2에 대한 답변입니다."
+                }
+            ]
+        }
+    ]
+}

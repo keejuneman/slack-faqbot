@@ -7,8 +7,6 @@ from slack_sdk.oauth.state_store import FileOAuthStateStore
 from handlers.faq_handler import handle_faq_command
 from handlers.question_handler import register_question_handlers
 from handlers.create_thread_handler import register_vacation_handlers  # Import the vacation handler
-from handlers.create_thread_handler2 import register_earlyleave_handlers
-from handlers.create_thread_handler3 import register_out_handlers
 from slack_bolt.authorization import AuthorizeResult
 import os
 from dotenv import load_dotenv
@@ -43,8 +41,6 @@ app = App(
 handle_faq_command(app)
 register_question_handlers(app)
 register_vacation_handlers(app)  # Register the vacation handler
-register_earlyleave_handlers(app)
-register_out_handlers(app)
 
 # Start the app using Socket Mode
 if __name__ == "__main__":

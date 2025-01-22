@@ -13,6 +13,7 @@ import time
 import slack_sdk
 from slack_sdk.web import WebClient
 from slack_bolt.context.say.say import Say
+import traceback
 
 def register_vacation_handlers(app: App):
     @app.command("/휴가신청")
@@ -78,58 +79,32 @@ def register_vacation_handlers(app: App):
     @app.view("leave_request_modal")
     def handle_modal_submission(ack, body, client, logger):
         try:
-            # 먼저 ack 호출
             ack()
             
-            # 워크스페이스 정보 로깅
-            request_team = body.get("team", {})
-            request_team_id = request_team.get("id")
-            request_team_domain = request_team.get("domain")
-            print(f"\n[요청 워크스페이스 정보]")
-            print(f"요청 팀 ID: {request_team_id}")
-            print(f"요청 팀 도메인: {request_team_domain}")
+            # 요청 팀 ID 가져오기
+            request_team_id = body.get("team", {}).get("id")
             
-            # 설치된 워크스페이스의 토큰으로 새 클라이언트 생성
-            installation = app.installation_store.find_installation(
-                enterprise_id=None,
-                team_id=request_team_id
-            )
-            if installation:
-                client = WebClient(token=installation.bot_token)
+            # 설치 정보 파일 경로
+            installation_path = f"/home/ubuntu/git/slack-auto_notice_bot/data/installations/{request_team_id}.json"
             
-            print(f"\n[클라이언트 정보]")
-            print(f"클라이언트 토큰: {client.token}")
-            
-            # 전송 워크스페이스 정보 확인
             try:
-                auth_test = client.auth_test()
-                print(f"\n[전송 워크스페이스 정보]")
-                print(f"전송 팀 ID: {auth_test['team_id']}")
-                print(f"전송 팀 이름: {auth_test['team']}")
-                print(f"전송 팀 도메인: {auth_test.get('team_domain', 'N/A')}")
+                # 설치 정보 파일 읽기
+                with open(installation_path, 'r') as f:
+                    installation_data = json.loads(f.read())
+                    
+                # 요청 팀의 bot_token으로 새 클라이언트 생성
+                client = WebClient(token=installation_data.get('bot_token'))
+                
             except Exception as e:
-                print(f"전송 워크스페이스 정보 조회 실패: {e}")
-            
-            # view 데이터 추출
-            view = body.get("view")
-            if not view:
-                raise Exception("뷰 데이터를 찾을 수 없습니다.")
-            
-            # metadata에서 channel_id 추출
-            try:
-                metadata_str = view.get("private_metadata", "{}")
-                metadata = json.loads(metadata_str)
-                channel_id = metadata.get("channel_id")
-                if not channel_id:
-                    raise Exception("채널 ID를 찾을 수 없습니다.")
-                
-                print(f"\n[채널 정보]")
-                print(f"전송할 채널 ID: {channel_id}")
-                
-            except json.JSONDecodeError:
-                raise Exception("메타데이터 형식이 잘못되었습니다.")
+                print(f"설치 정보 읽기 실패: {str(e)}")
+                raise Exception("워크스페이스 설치 정보를 찾을 수 없습니다.")
 
-            # 메시지 생성 및 전송
+            # 메타데이터에서 channel_id 추출
+            metadata_str = body["view"].get("private_metadata", "{}")
+            metadata = json.loads(metadata_str)
+            channel_id = metadata.get("channel_id")
+            
+            # 메시지 생성 및 전송 (기존 코드와 동일)
             message = (
                 f"*출결 정정 신청 스레드*\n\n"
                 f"*신청자:* <@{body['user']['id']}>\n"
@@ -229,7 +204,7 @@ def register_vacation_handlers(app: App):
                 try:
                     result = sheet.values().get(
                         spreadsheetId='1Qd4-EZ8fAu_FRiUDBZ5i6O1g-blWXiNbzqKe0-7bTfk',
-                        range='통합!A5:A1000'  # A5부터 A1000까지 검사
+                        range='통합!A5:A9000'  # A5부터 A1000까지 검사
                     ).execute()
                 except Exception as e:
                     if attempt < max_retries - 1:  # 마지막 시도가 아니면
@@ -328,41 +303,51 @@ def register_vacation_handlers(app: App):
         except Exception as e:
             print(f"Error: {e}")
 
-    # 휴가 유형 선택 시 실행되는 액션 핸들러 추가
-    @app.action("static_select-action")
+    # 휴가 유형 선택 시 실행되는 액션 핸들러 수정
+    @app.action("static_select-action")  # action_id와 일치하도록 수정
     def handle_leave_type_selection(ack, body, client):
         ack()
-        selected_option = body["actions"][0]["selected_option"]["text"]["text"]
-        print(f"Selected leave type: {selected_option}")  # 디버깅을 위한 출력
-        
-        view = client.views_update(
-            view_id=body["view"]["id"],
-            hash=body["view"]["hash"],
-            view={
-                "type": "modal",
-                "callback_id": "leave_request_modal",
-                "private_metadata": body["view"].get("private_metadata", ""),
-                "title": {
-                    "type": "plain_text",
-                    "text": "휴가 신청",
-                    "emoji": True
-                },
-                "submit": {
-                    "type": "plain_text",
-                    "text": "제출",
-                    "emoji": True
-                },
-                "close": {
-                    "type": "plain_text",
-                    "text": "취소",
-                    "emoji": True
-                },
-                "blocks": get_modal_blocks(selected_option)
-            }
-        )
+        try:
+            # body 구조 출력
+            print("액션 핸들러 호출됨")
+            print("Body 구조:", json.dumps(body, indent=2))
+            
+            # 선택된 옵션 가져오기
+            selected_option = body["actions"][0]["selected_option"]["text"]["text"]
+            print(f"선택된 휴가 유형: {selected_option}")
+            
+            view = client.views_update(
+                view_id=body["view"]["id"],
+                hash=body["view"]["hash"],
+                view={
+                    "type": "modal",
+                    "callback_id": "leave_request_modal",
+                    "private_metadata": body["view"].get("private_metadata", ""),
+                    "title": {
+                        "type": "plain_text",
+                        "text": "휴가 신청",
+                        "emoji": True
+                    },
+                    "submit": {
+                        "type": "plain_text",
+                        "text": "제출",
+                        "emoji": True
+                    },
+                    "close": {
+                        "type": "plain_text",
+                        "text": "취소",
+                        "emoji": True
+                    },
+                    "blocks": get_modal_blocks(selected_option)
+                }
+            )
+            print("모달 업데이트 완료")
+            
+        except Exception as e:
+            print(f"휴가 유형 선택 처리 중 에러 발생: {str(e)}")
+            print("에러 상세 정보:", traceback.format_exc())
 
     def get_modal_blocks(leave_type):
-        # 기본 블록 구성
         blocks = [
             {
                 "type": "section",
@@ -683,27 +668,21 @@ def register_vacation_handlers(app: App):
                 }
             },
             {"type": "divider"},
+            {
+                "type": "input",
+                "block_id": "file_upload",
+                "optional": True,
+                "element": {
+                    "type": "file_input",
+                    "action_id": "file_input-action"
+                },
+                "label": {
+                    "type": "plain_text",
+                    "text": "증빙서류를 첨부해주세요",
+                    "emoji": True
+                }
+            },
+            {"type": "divider"},
         ]
         
-        # 정확한 '휴가' 텍스트 매칭
-        if leave_type == "휴가":
-            print(f"Adding file upload block for leave type: {leave_type}")  # 디버깅을 위한 출력
-            blocks.extend([
-                {"type": "divider"},
-                {
-                    "type": "input",
-                    "block_id": "file_upload",
-                    "element": {
-                        "type": "file_input",
-                        "action_id": "file_input-action"
-                    },
-                    "label": {
-                        "type": "plain_text",
-                        "text": "증빙서류를 첨부해주세요",
-                        "emoji": True
-                    }
-                }
-            ])
-        
         return blocks
-
